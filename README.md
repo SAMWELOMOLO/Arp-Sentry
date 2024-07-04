@@ -17,7 +17,7 @@ Installation
 Clone the repository:
 
 Copy code
-git clone https://github.com/yourusername/arpsentry.git
+git clone https://github.com/SAMWELOMOLO/arpsentry.git
 cd arpsentry
 Install the required packages:
 
