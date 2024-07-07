@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>arpsentry &mdash; ARP Spoofing Detection Tool 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=2709fde1"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ARP Spoofing Detection Tool
+          </a>
+              <div class="version">
+                0.1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">ARP-Spoofing-Detection and Mitigation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ARP Spoofing Detection Tool</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">arpsentry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for arpsentry</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">scapy.all</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">scapy.all</span> <span class="k">as</span> <span class="nn">scapy</span>
+<span class="kn">from</span> <span class="nn">scapy.all</span> <span class="kn">import</span> <span class="n">ARP</span><span class="p">,</span> <span class="n">Ether</span><span class="p">,</span> <span class="n">srp</span>
+<span class="kn">import</span> <span class="nn">tkinter</span> <span class="k">as</span> <span class="nn">tk</span>
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">ttk</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+
+<span class="c1"># Whitelisted MAC addresses</span>
+<span class="n">whitelist</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># Blacklisted MAC addresses</span>
+<span class="n">blacklist</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="add_to_whitelist">
+<a class="viewcode-back" href="../modules.html#arpsentry.add_to_whitelist">[docs]</a>
+<span class="k">def</span> <span class="nf">add_to_whitelist</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a MAC address to the whitelist.</span>
+
+<span class="sd">    If the provided MAC address is not already in the whitelist and is not empty, it is added to the whitelist and displayed in the GUI.</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mac</span> <span class="o">=</span> <span class="n">mac_entry</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mac</span> <span class="ow">and</span> <span class="n">mac</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">whitelist</span><span class="p">:</span>
+        <span class="n">whitelist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mac</span><span class="p">)</span>
+        <span class="n">whitelist_listbox</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">END</span><span class="p">,</span> <span class="n">mac</span><span class="p">)</span>
+        <span class="n">mac_entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tk</span><span class="o">.</span><span class="n">END</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="remove_from_whitelist">
+<a class="viewcode-back" href="../modules.html#arpsentry.remove_from_whitelist">[docs]</a>
+<span class="k">def</span> <span class="nf">remove_from_whitelist</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove a MAC address from the whitelist.</span>
+
+<span class="sd">    This function removes a selected MAC address from the whitelist and updates the GUI.</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">selection</span> <span class="o">=</span> <span class="n">whitelist_listbox</span><span class="o">.</span><span class="n">curselection</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">selection</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">whitelist</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">whitelist_listbox</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="add_to_blacklist">
+<a class="viewcode-back" href="../modules.html#arpsentry.add_to_blacklist">[docs]</a>
+<span class="k">def</span> <span class="nf">add_to_blacklist</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a MAC address to the blacklist.</span>
+
+<span class="sd">    If the provided MAC address is not already in the blacklist and is not empty, it is added to the blacklist and displayed in the GUI.</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mac</span> <span class="o">=</span> <span class="n">mac_entry</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mac</span> <span class="ow">and</span> <span class="n">mac</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">blacklist</span><span class="p">:</span>
+        <span class="n">blacklist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mac</span><span class="p">)</span>
+        <span class="n">blacklist_listbox</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">END</span><span class="p">,</span> <span class="n">mac</span><span class="p">)</span>
+        <span class="n">mac_entry</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">tk</span><span class="o">.</span><span class="n">END</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="remove_from_blacklist">
+<a class="viewcode-back" href="../modules.html#arpsentry.remove_from_blacklist">[docs]</a>
+<span class="k">def</span> <span class="nf">remove_from_blacklist</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove a MAC address from the blacklist.</span>
+
+<span class="sd">    This function removes a selected MAC address from the blacklist and updates the GUI.</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">selection</span> <span class="o">=</span> <span class="n">blacklist_listbox</span><span class="o">.</span><span class="n">curselection</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">selection</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">blacklist</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">blacklist_listbox</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="integrate_with_siem">
+<a class="viewcode-back" href="../modules.html#arpsentry.integrate_with_siem">[docs]</a>
+<span class="k">def</span> <span class="nf">integrate_with_siem</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Integrate with SIEM by sending an event.</span>
+
+<span class="sd">    If SIEM integration is enabled, this function sends a JSON-encoded event to the configured SIEM endpoint.</span>
+
+<span class="sd">    :param dict event: The event data to be sent to the SIEM.</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">siem_integration_enabled</span><span class="p">:</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Bearer </span><span class="si">{</span><span class="n">siem_auth_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">siem_url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">payload</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to send event to SIEM: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="show_notification">
+<a class="viewcode-back" href="../modules.html#arpsentry.show_notification">[docs]</a>
+<span class="k">def</span> <span class="nf">show_notification</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Display a notification.</span>
+
+<span class="sd">    This function creates a simple Tkinter window to display a notification message.</span>
+
+<span class="sd">    :param str message: The notification message to be displayed.</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Tk</span><span class="p">()</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;ARP Spoofing Detector&quot;</span><span class="p">)</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">message</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Arial&quot;</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span>
+    <span class="n">label</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">overrideredirect</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">attributes</span><span class="p">(</span><span class="s2">&quot;-alpha&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">after</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="n">root</span><span class="o">.</span><span class="n">destroy</span><span class="p">)</span>
+    <span class="n">root</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="get_mac">
+<a class="viewcode-back" href="../modules.html#arpsentry.get_mac">[docs]</a>
+<span class="k">def</span> <span class="nf">get_mac</span><span class="p">(</span><span class="n">ip</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the MAC address of a given IP.</span>
+
+<span class="sd">    This function sends an ARP request to the specified IP address and returns the MAC address from the response.</span>
+
+<span class="sd">    :param str ip: The IP address to query.</span>
+<span class="sd">    :return: str: The MAC address of the IP, or None if no response is received.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arp_request</span> <span class="o">=</span> <span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">(</span><span class="n">pdst</span><span class="o">=</span><span class="n">ip</span><span class="p">)</span>
+    <span class="n">broadcast</span> <span class="o">=</span> <span class="n">scapy</span><span class="o">.</span><span class="n">Ether</span><span class="p">(</span><span class="n">dst</span><span class="o">=</span><span class="s2">&quot;ff:ff:ff:ff:ff:ff&quot;</span><span class="p">)</span>
+    <span class="n">arp_request_broadcast</span> <span class="o">=</span> <span class="n">broadcast</span> <span class="o">/</span> <span class="n">arp_request</span>
+    <span class="n">answered_list</span> <span class="o">=</span> <span class="n">scapy</span><span class="o">.</span><span class="n">srp</span><span class="p">(</span><span class="n">arp_request_broadcast</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">answered_list</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">answered_list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">hwsrc</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="sniff">
+<a class="viewcode-back" href="../modules.html#arpsentry.sniff">[docs]</a>
+<span class="k">def</span> <span class="nf">sniff</span><span class="p">(</span><span class="n">interface</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sniff packets on a specific interface.</span>
+
+<span class="sd">    This function starts sniffing packets on the specified network interface and processes each packet using the process_sniffed_packet function.</span>
+
+<span class="sd">    :param str interface: The network interface to sniff on.</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scapy</span><span class="o">.</span><span class="n">sniff</span><span class="p">(</span><span class="n">iface</span><span class="o">=</span><span class="n">interface</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prn</span><span class="o">=</span><span class="n">process_sniffed_packet</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="process_sniffed_packet">
+<a class="viewcode-back" href="../modules.html#arpsentry.process_sniffed_packet">[docs]</a>
+<span class="k">def</span> <span class="nf">process_sniffed_packet</span><span class="p">(</span><span class="n">packet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Process sniffed packets for ARP spoofing.</span>
+
+<span class="sd">    This function analyzes sniffed ARP packets to detect spoofing attacks. If a spoofing attack is detected, it blocks the attacker and triggers an alert.</span>
+
+<span class="sd">    :param packet: The sniffed packet to be processed.</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span> <span class="ow">in</span> <span class="n">packet</span> <span class="ow">and</span> <span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">op</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">real_mac</span> <span class="o">=</span> <span class="n">get_mac</span><span class="p">(</span><span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">psrc</span><span class="p">)</span>
+            <span class="n">response_mac</span> <span class="o">=</span> <span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">hwsrc</span>
+
+            <span class="k">if</span> <span class="n">response_mac</span> <span class="ow">in</span> <span class="n">whitelist</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="k">if</span> <span class="n">real_mac</span> <span class="o">!=</span> <span class="n">response_mac</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">response_mac</span> <span class="ow">in</span> <span class="n">blacklist</span><span class="p">:</span>
+                    <span class="k">return</span>
+                <span class="n">block_attacker</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="n">real_mac</span><span class="p">)</span>
+                <span class="n">notification_message</span> <span class="o">=</span> <span class="s2">&quot;🎉 You&#39;re safe! Blocked an attack.&quot;</span>
+                <span class="n">notification_thread</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">show_notification</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">notification_message</span><span class="p">,))</span>
+                <span class="n">notification_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                <span class="n">blacklist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response_mac</span><span class="p">)</span>
+                <span class="n">blacklist_listbox</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">END</span><span class="p">,</span> <span class="n">response_mac</span><span class="p">)</span>
+
+                <span class="c1"># Integrate with SIEM</span>
+                <span class="n">event</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;arp_spoofing&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;source_ip&quot;</span><span class="p">:</span> <span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">psrc</span><span class="p">,</span>
+                    <span class="s2">&quot;source_mac&quot;</span><span class="p">:</span> <span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">hwsrc</span><span class="p">,</span>
+                    <span class="s2">&quot;victim_ip&quot;</span><span class="p">:</span> <span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">pdst</span><span class="p">,</span>
+                    <span class="s2">&quot;victim_mac&quot;</span><span class="p">:</span> <span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">hwdst</span><span class="p">,</span>
+                    <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">packet</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="n">integrate_with_siem</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+
+                <span class="c1"># Automated mitigation strategies</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;iptables&quot;</span><span class="p">,</span> <span class="s2">&quot;-A&quot;</span><span class="p">,</span> <span class="s2">&quot;INPUT&quot;</span><span class="p">,</span> <span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">psrc</span><span class="p">,</span> <span class="s2">&quot;-j&quot;</span><span class="p">,</span> <span class="s2">&quot;DROP&quot;</span><span class="p">])</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;iptables&quot;</span><span class="p">,</span> <span class="s2">&quot;-A&quot;</span><span class="p">,</span> <span class="s2">&quot;OUTPUT&quot;</span><span class="p">,</span> <span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">psrc</span><span class="p">,</span> <span class="s2">&quot;-j&quot;</span><span class="p">,</span> <span class="s2">&quot;DROP&quot;</span><span class="p">])</span>
+
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="block_attacker">
+<a class="viewcode-back" href="../modules.html#arpsentry.block_attacker">[docs]</a>
+<span class="k">def</span> <span class="nf">block_attacker</span><span class="p">(</span><span class="n">packet</span><span class="p">,</span> <span class="n">real_mac</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Block the attacker by sending fake ARP replies.</span>
+
+<span class="sd">    This function blocks the attacker by sending fake ARP replies to the victim and the attacker.</span>
+
+<span class="sd">    :param packet: The packet containing the ARP spoofing attempt.</span>
+<span class="sd">    :param str real_mac: The real MAC address of the victim device.</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">victim_ip</span> <span class="o">=</span> <span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">pdst</span>
+    <span class="n">gateway_ip</span> <span class="o">=</span> <span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">psrc</span>
+    <span class="n">victim_mac</span> <span class="o">=</span> <span class="n">packet</span><span class="p">[</span><span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">hwdst</span>
+    <span class="n">attacker_ip</span> <span class="o">=</span> <span class="n">packet</span><span class="p">[</span><span class="n">ARP</span><span class="p">]</span><span class="o">.</span><span class="n">psrc</span>
+    <span class="n">gateway_mac</span> <span class="o">=</span> <span class="n">real_mac</span>
+
+    <span class="n">victim_arp_reply</span> <span class="o">=</span> <span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pdst</span><span class="o">=</span><span class="n">victim_ip</span><span class="p">,</span> <span class="n">hwdst</span><span class="o">=</span><span class="n">victim_mac</span><span class="p">,</span> <span class="n">psrc</span><span class="o">=</span><span class="n">gateway_ip</span><span class="p">,</span> <span class="n">hwsrc</span><span class="o">=</span><span class="n">gateway_mac</span><span class="p">)</span>
+    <span class="n">scapy</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">victim_arp_reply</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">inter</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Block incoming traffic from the attacker</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;sudo&quot;</span><span class="p">,</span> <span class="s2">&quot;iptables&quot;</span><span class="p">,</span> <span class="s2">&quot;-A&quot;</span><span class="p">,</span> <span class="s2">&quot;INPUT&quot;</span><span class="p">,</span> <span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="n">attacker_ip</span><span class="p">,</span> <span class="s2">&quot;-j&quot;</span><span class="p">,</span> <span class="s2">&quot;DROP&quot;</span><span class="p">])</span>
+
+    <span class="n">gateway_arp_reply</span> <span class="o">=</span> <span class="n">scapy</span><span class="o">.</span><span class="n">ARP</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pdst</span><span class="o">=</span><span class="n">gateway_ip</span><span class="p">,</span> <span class="n">hwdst</span><span class="o">=</span><span class="n">gateway_mac</span><span class="p">,</span> <span class="n">psrc</span><span class="o">=</span><span class="n">victim_ip</span><span class="p">,</span> <span class="n">hwsrc</span><span class="o">=</span><span class="n">victim_mac</span><span class="p">)</span>
+    <span class="n">scapy</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">gateway_arp_reply</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">inter</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Block outgoing traffic to the attacker</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;sudo&quot;</span><span class="p">,</span> <span class="s2">&quot;iptables&quot;</span><span class="p">,</span> <span class="s2">&quot;-A&quot;</span><span class="p">,</span> <span class="s2">&quot;OUTPUT&quot;</span><span class="p">,</span> <span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="n">attacker_ip</span><span class="p">,</span> <span class="s2">&quot;-j&quot;</span><span class="p">,</span> <span class="s2">&quot;DROP&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Restore the ARP cache of the victim</span>
+    <span class="n">send</span><span class="p">(</span><span class="n">ARP</span><span class="p">(</span><span class="n">op</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pdst</span><span class="o">=</span><span class="n">victim_ip</span><span class="p">,</span> <span class="n">hwdst</span><span class="o">=</span><span class="s2">&quot;ff:ff:ff:ff:ff:ff&quot;</span><span class="p">,</span> <span class="n">psrc</span><span class="o">=</span><span class="n">attacker_ip</span><span class="p">,</span> <span class="n">hwsrc</span><span class="o">=</span><span class="n">real_mac</span><span class="p">),</span> <span class="n">count</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="handle_interfaces">
+<a class="viewcode-back" href="../modules.html#arpsentry.handle_interfaces">[docs]</a>
+<span class="k">def</span> <span class="nf">handle_interfaces</span><span class="p">(</span><span class="n">interfaces</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Start sniffing on all specified network interfaces.</span>
+
+<span class="sd">    This function iterates through the provided list of network interfaces and starts a separate thread for each interface to sniff packets.</span>
+
+<span class="sd">    :param list interfaces: A list of network interfaces to sniff on.</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">interface</span> <span class="ow">in</span> <span class="n">interfaces</span><span class="p">:</span>
+        <span class="n">sniff_thread</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">sniff</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">interface</span><span class="p">,))</span>
+        <span class="n">sniff_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+
+<span class="c1"># GUI</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Tk</span><span class="p">()</span>
+<span class="n">root</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;ArpSentry&quot;</span><span class="p">)</span>
+<span class="n">root</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="s2">&quot;500x400&quot;</span><span class="p">)</span>
+<span class="n">style</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Style</span><span class="p">()</span>
+<span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">&quot;TFrame&quot;</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="s2">&quot;#f0f0f0&quot;</span><span class="p">)</span>
+<span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">&quot;TButton&quot;</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">relief</span><span class="o">=</span><span class="s2">&quot;flat&quot;</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="s2">&quot;#ccc&quot;</span><span class="p">)</span>
+<span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">&quot;TLabel&quot;</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="s2">&quot;#f0f0f0&quot;</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
+<span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">&quot;TNotebook&quot;</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="s2">&quot;#f0f0f0&quot;</span><span class="p">)</span>
+<span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">&quot;TNotebook.Tab&quot;</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+
+<span class="c1"># Tabs</span>
+<span class="n">notebook</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Notebook</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+<span class="n">notebook</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">fill</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Whitelist tab</span>
+<span class="n">whitelist_tab</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Frame</span><span class="p">(</span><span class="n">notebook</span><span class="p">)</span>
+<span class="n">notebook</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">whitelist_tab</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Whitelist&quot;</span><span class="p">)</span>
+
+<span class="n">whitelist_label</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">whitelist_tab</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Whitelisted MAC addresses:&quot;</span><span class="p">)</span>
+<span class="n">whitelist_label</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">whitelist_listbox</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Listbox</span><span class="p">(</span><span class="n">whitelist_tab</span><span class="p">,</span> <span class="n">selectmode</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">SINGLE</span><span class="p">)</span>
+<span class="n">whitelist_listbox</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">whitelist_button_frame</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Frame</span><span class="p">(</span><span class="n">whitelist_tab</span><span class="p">)</span>
+<span class="n">whitelist_button_frame</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">add_whitelist_button</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">whitelist_button_frame</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Add to Whitelist&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">add_to_whitelist</span><span class="p">)</span>
+<span class="n">add_whitelist_button</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="n">remove_whitelist_button</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">whitelist_button_frame</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Remove from Whitelist&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">remove_from_whitelist</span><span class="p">)</span>
+<span class="n">remove_whitelist_button</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Blacklist tab</span>
+<span class="n">blacklist_tab</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Frame</span><span class="p">(</span><span class="n">notebook</span><span class="p">)</span>
+<span class="n">notebook</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">blacklist_tab</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Blacklist&quot;</span><span class="p">)</span>
+
+<span class="n">blacklist_label</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">blacklist_tab</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Blacklisted MAC addresses:&quot;</span><span class="p">)</span>
+<span class="n">blacklist_label</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">blacklist_listbox</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Listbox</span><span class="p">(</span><span class="n">blacklist_tab</span><span class="p">,</span> <span class="n">selectmode</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">SINGLE</span><span class="p">)</span>
+<span class="n">blacklist_listbox</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">blacklist_button_frame</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Frame</span><span class="p">(</span><span class="n">blacklist_tab</span><span class="p">)</span>
+<span class="n">blacklist_button_frame</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">add_blacklist_button</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">blacklist_button_frame</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Add to Blacklist&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">add_to_blacklist</span><span class="p">)</span>
+<span class="n">add_blacklist_button</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="n">remove_blacklist_button</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">blacklist_button_frame</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Remove from Blacklist&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">remove_from_blacklist</span><span class="p">)</span>
+<span class="n">remove_blacklist_button</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Entry for MAC address</span>
+<span class="n">mac_entry_label</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;MAC Address:&quot;</span><span class="p">)</span>
+<span class="n">mac_entry_label</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">mac_entry</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+<span class="n">mac_entry</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># SIEM integration settings</span>
+<span class="n">siem_integration_enabled</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">siem_url</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">siem_auth_token</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+<div class="viewcode-block" id="enable_siem_integration">
+<a class="viewcode-back" href="../modules.html#arpsentry.enable_siem_integration">[docs]</a>
+<span class="k">def</span> <span class="nf">enable_siem_integration</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enable SIEM integration.</span>
+
+<span class="sd">    This function enables SIEM integration by setting the necessary configurations.</span>
+
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">siem_integration_enabled</span>
+    <span class="n">siem_integration_enabled</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<span class="n">siem_button_frame</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Frame</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+<span class="n">siem_button_frame</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">pady</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">enable_siem_button</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">siem_button_frame</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Enable SIEM Integration&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">enable_siem_integration</span><span class="p">)</span>
+<span class="n">enable_siem_button</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">pady</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Start sniffing on specified interfaces</span>
+<span class="n">interfaces</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;eth0&quot;</span><span class="p">,</span> <span class="s2">&quot;wlan0&quot;</span><span class="p">]</span>
+<span class="n">handle_interfaces</span><span class="p">(</span><span class="n">interfaces</span><span class="p">)</span>
+
+<span class="n">root</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Samwel Omolo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
